@@ -15,6 +15,11 @@ public class CameraController : MonoBehaviour
     public float minZ = -10.0f;
     public float maxZ = 10.0f;
 
+    public float minYRotation = -80.0f;
+    public float maxYRotation = 80.0f;
+
+    private float currentYRotation = 0f;
+
     private Vector3 lastMousePos;
 
     void Update()
@@ -37,8 +42,13 @@ public class CameraController : MonoBehaviour
 
             transform.Rotate(Vector3.up, delta.x * rotateSpeed, Space.World);
 
-            Vector3 pitchAxis = transform.right;
-            transform.Rotate(pitchAxis, -delta.y * rotateSpeed, Space.World);
+            float rotationY = -delta.y * rotateSpeed;
+            if (currentYRotation + rotationY >= minYRotation && currentYRotation + rotationY <= maxYRotation)
+            {
+                currentYRotation += rotationY;
+                Vector3 pitchAxis = transform.right;
+                transform.Rotate(pitchAxis, rotationY, Space.World);
+            }
         }
 
         float scroll = Input.GetAxis("Mouse ScrollWheel");
@@ -58,4 +68,3 @@ public class CameraController : MonoBehaviour
         Gizmos.DrawWireCube(new Vector3((minX + maxX)/2, (minY + maxY)/2, (minZ + maxZ)/2), new Vector3(maxX - minX, maxY - minY, maxZ - minZ));
     }
 }
-
