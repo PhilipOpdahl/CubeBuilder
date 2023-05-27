@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    public float moveSpeed = 10.0f;
+    public float moveSpeed = 5.0f;
     public float rotateSpeed = 1.0f;
-    public float scrollSpeed = 10.0f;
+    public float scrollSpeed = 2.5f;
 
     public float minY = -10.0f;
     public float maxY = 10.0f;
@@ -51,7 +51,7 @@ public class CameraController : MonoBehaviour
         clampedPosition.z = Mathf.Clamp(clampedPosition.z, minZ, maxZ);
         transform.position = clampedPosition;
     }
-    
+
     void OnDrawGizmos()
     {
         Gizmos.color = Color.red;

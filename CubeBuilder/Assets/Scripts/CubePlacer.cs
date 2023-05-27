@@ -44,14 +44,14 @@ public class CubePlacer : MonoBehaviour
                     normal.y = Mathf.Round(normal.y);
                     normal.z = Mathf.Round(normal.z);
 
-                    position += normal; 
+                    position += normal * 0.1f; 
                 }
                 else 
                 {
                     position = hit.point; 
-                    position.x = Mathf.Round(position.x);
-                    position.y = Mathf.Round(position.y);
-                    position.z = Mathf.Round(position.z);
+                    position.x = Mathf.Round(position.x * 10) / 10;
+                    position.y = Mathf.Round(position.y * 10) / 10;
+                    position.z = Mathf.Round(position.z * 10) / 10;
                 }
 
                 GameObject cube = Instantiate(cubePrefab, position, Quaternion.identity);
