@@ -11,7 +11,7 @@ public class CubePlacer : MonoBehaviour
 {
     public GameObject cubePrefab;
     public GameObject grid;
-    public Camera camera;
+    public Camera mainCamera;
     public float placeRate = 0.1f;
     public Color currentColor = Color.white;
 
@@ -24,12 +24,13 @@ public class CubePlacer : MonoBehaviour
     private List<GameObject> cubes = new List<GameObject>();
     private List<GameObject> loadedCubes = new List<GameObject>();
     private bool isStructureReadyToPlace = false;
-    private bool isStructurePlaced = false;
 
     public float rotationStep = 90f;
     private bool isSelecting = false;
     private Vector3 mousePosition1;
     private List<GameObject> selectedCubes = new List<GameObject>();
+
+    private Dictionary<GameObject, List<GameObject>> cubeConnections = new Dictionary<GameObject, List<GameObject>>();
 
     void Update()
     {
@@ -39,7 +40,7 @@ public class CubePlacer : MonoBehaviour
         }
 
         Vector3 currentMousePosition = Input.mousePosition;
-        Vector3 currentCameraPosition = camera.transform.position;
+        Vector3 currentCameraPosition = mainCamera.transform.position;
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -103,6 +104,24 @@ public class CubePlacer : MonoBehaviour
                     cubes.Add(cube);
 
                     nextPlaceTime = Time.time + placeRate;
+
+                    cubeConnections[cube] = new List<GameObject>();
+                    float connectionThreshold = 1.1f;
+                    foreach (GameObject otherCube in cubes)
+                    {
+                        if (cube == otherCube) continue;
+                        if (Vector3.Distance(cube.transform.position, otherCube.transform.position) < connectionThreshold)
+                        {
+                            FixedJoint joint = cube.AddComponent<FixedJoint>();
+                            joint.connectedBody = otherCube.GetComponent<Rigidbody>();
+                            cubeConnections[cube].Add(otherCube);
+                            if (!cubeConnections.ContainsKey(otherCube))
+                            {
+                                cubeConnections[otherCube] = new List<GameObject>();
+                            }
+                            cubeConnections[otherCube].Add(cube);
+                        }
+                    }
                 }
             }
 
@@ -180,21 +199,45 @@ public class CubePlacer : MonoBehaviour
         }
     }
 
-    public void ActivateGravity()
+    public void PlaceCube(Vector3 location)
     {
-        foreach (Rigidbody cube in placedCubes)
+        GameObject cube = Instantiate(cubePrefab, location, Quaternion.identity);
+        cubes.Add(cube);
+        cubeConnections[cube] = new List<GameObject>();
+
+        foreach (GameObject otherCube in cubes)
         {
-            if(cube != null)
+            if (cube == otherCube) continue;
+
+            float connectionThreshold = 1.1f;
+
+            if (Vector3.Distance(cube.transform.position, otherCube.transform.position) < connectionThreshold)
             {
-                cube.isKinematic = false;
+                FixedJoint joint = cube.AddComponent<FixedJoint>();
+                joint.connectedBody = otherCube.GetComponent<Rigidbody>();
+
+                cubeConnections[cube].Add(otherCube);
+                if (!cubeConnections.ContainsKey(otherCube))
+                {
+                    cubeConnections[otherCube] = new List<GameObject>();
+                }
+                cubeConnections[otherCube].Add(cube);
             }
         }
-        
+    }
+
+    public void ActivateGravity()
+    {
         foreach (GameObject cube in cubes)
         {
-            if(cube != null)
+            cube.GetComponent<Rigidbody>().isKinematic = false;
+
+            if (cubeConnections.ContainsKey(cube))
             {
-                cube.GetComponent<Rigidbody>().isKinematic = false;
+                foreach (GameObject connectedCube in cubeConnections[cube])
+                {
+                    connectedCube.GetComponent<Rigidbody>().isKinematic = false;
+                }
             }
         }
     }
@@ -314,7 +357,6 @@ public class CubePlacer : MonoBehaviour
             }
             
             isStructureReadyToPlace = true;
-            isStructurePlaced = false;
         }
     }
 
@@ -417,7 +459,7 @@ public class CubePlacer : MonoBehaviour
     {
         if (selectedCubes.Count == 0)
         return;
-        
+
         List<GameObject> newCubes = new List<GameObject>();
 
         float highestY = selectedCubes[0].transform.position.y;

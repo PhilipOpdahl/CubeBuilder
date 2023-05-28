@@ -2332,7 +2332,7 @@ MonoBehaviour:
   cubePrefab: {fileID: 386423071707228024, guid: a9fa5c6803ce927498813a3ed293f403,
     type: 3}
   grid: {fileID: 1794812849}
-  camera: {fileID: 330585545}
+  mainCamera: {fileID: 330585545}
   placeRate: 0.1
   currentColor: {r: 1, g: 1, b: 1, a: 1}
   structureParent: {fileID: 568928985}
