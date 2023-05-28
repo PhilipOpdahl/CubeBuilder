@@ -41,6 +41,11 @@ public class CubePlacer : MonoBehaviour
         Vector3 currentMousePosition = Input.mousePosition;
         Vector3 currentCameraPosition = camera.transform.position;
 
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            AddLayerToSelectedCubes();
+        }
+
         if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
         {
             if (Input.GetMouseButtonDown(0))
@@ -56,6 +61,12 @@ public class CubePlacer : MonoBehaviour
         }
         else
         {
+            if (isSelecting)
+            {
+                isSelecting = false;
+                ClearSelection();
+            }
+
             if (Input.GetMouseButton(0) && !isStructureReadyToPlace && (Input.GetMouseButtonDown(0) || currentMousePosition != lastMousePosition || currentCameraPosition != lastCameraPosition) && Time.time >= nextPlaceTime)
             {
                 RaycastHit hit;
@@ -130,7 +141,6 @@ public class CubePlacer : MonoBehaviour
         }
     }
 
-
     void OnGUI()
     {
         if (isSelecting) 
@@ -168,11 +178,6 @@ public class CubePlacer : MonoBehaviour
                 cube.GetComponent<Renderer>().material.color = newColor;
             }
         }
-    }
-
-    public void OnClickChangeSelectedCubeColors()
-    {
-        ChangeSelectedCubeColors(Color.blue);
     }
 
     public void ActivateGravity()
@@ -267,7 +272,10 @@ public class CubePlacer : MonoBehaviour
         FileStream stream = new FileStream(path, FileMode.Create);
 
         List<CubeData> data = new List<CubeData>();
-        foreach (GameObject cube in cubes)
+        
+        List<GameObject> cubesToSave = (selectedCubes.Count > 0) ? selectedCubes : cubes;
+
+        foreach (GameObject cube in cubesToSave)
         {
             if (cube != null)
             {
@@ -403,6 +411,51 @@ public class CubePlacer : MonoBehaviour
         {
             cube.transform.RotateAround(rotationPoint, Vector3.up, rotationStep);
         }
+    }
+
+    void AddLayerToSelectedCubes()
+    {
+        if (selectedCubes.Count == 0)
+        return;
+        
+        List<GameObject> newCubes = new List<GameObject>();
+
+        float highestY = selectedCubes[0].transform.position.y;
+        foreach (GameObject cube in selectedCubes)
+        {
+            if (cube.transform.position.y > highestY)
+            {
+                highestY = cube.transform.position.y;
+            }
+        }
+
+        foreach (GameObject cube in selectedCubes)
+        {
+            if (cube.transform.position.y == highestY)
+            {
+                float cubeHeight = cube.transform.localScale.y;
+                Vector3 newPosition = cube.transform.position + new Vector3(0, cubeHeight, 0);
+                GameObject newCube = Instantiate(cubePrefab, newPosition, Quaternion.identity);
+                newCube.GetComponent<Renderer>().material.color = cube.GetComponent<Renderer>().material.color;
+                newCube.transform.SetParent(structureParent.transform);
+                newCube.GetComponent<Rigidbody>().mass = 10.0f;
+                placedCubes.Add(newCube.GetComponent<Rigidbody>());
+                cubes.Add(newCube);
+                newCubes.Add(newCube);
+            }
+        }
+
+        selectedCubes = newCubes;
+    }
+
+    void ClearSelection()
+    {
+        foreach (GameObject cube in selectedCubes)
+        {
+            var cubeRenderer = cube.GetComponent<Renderer>();
+            cubeRenderer.material.color = Color.white;
+        }
+        selectedCubes.Clear();
     }
 }
 

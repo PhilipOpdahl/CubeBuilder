@@ -271,7 +271,7 @@ GameObject:
   - component: {fileID: 85110205}
   - component: {fileID: 85110204}
   m_Layer: 5
-  m_Name: Load
+  m_Name: Paste
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -583,7 +583,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Load
+  m_text: Paste
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1731,7 +1731,7 @@ GameObject:
   - component: {fileID: 784044305}
   - component: {fileID: 784044304}
   m_Layer: 5
-  m_Name: Save
+  m_Name: Copy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2336,6 +2336,7 @@ MonoBehaviour:
   placeRate: 0.1
   currentColor: {r: 1, g: 1, b: 1, a: 1}
   structureParent: {fileID: 568928985}
+  rotationStep: 90
 --- !u!4 &1017238323
 Transform:
   m_ObjectHideFlags: 0
@@ -4782,7 +4783,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Save
+  m_text: Copy
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
