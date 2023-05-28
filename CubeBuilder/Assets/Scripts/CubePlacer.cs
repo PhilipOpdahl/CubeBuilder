@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Linq;
 
 public class CubePlacer : MonoBehaviour
 {
@@ -25,6 +26,11 @@ public class CubePlacer : MonoBehaviour
     private bool isStructureReadyToPlace = false;
     private bool isStructurePlaced = false;
 
+    public float rotationStep = 90f;
+    private bool isSelecting = false;
+    private Vector3 mousePosition1;
+    private List<GameObject> selectedCubes = new List<GameObject>();
+
     void Update()
     {
         if (EventSystem.current.IsPointerOverGameObject())
@@ -35,72 +41,138 @@ public class CubePlacer : MonoBehaviour
         Vector3 currentMousePosition = Input.mousePosition;
         Vector3 currentCameraPosition = camera.transform.position;
 
-        if (Input.GetMouseButton(0) && !isStructureReadyToPlace && (Input.GetMouseButtonDown(0) || currentMousePosition != lastMousePosition || currentCameraPosition != lastCameraPosition) && Time.time >= nextPlaceTime)
+        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
         {
-            RaycastHit hit;
-            Ray ray = Camera.main.ScreenPointToRay(currentMousePosition);
-
-            if (Physics.Raycast(ray, out hit))
+            if (Input.GetMouseButtonDown(0))
             {
-                Vector3 position;
-
-                if (hit.transform != grid.transform)
-                {
-                    position = hit.transform.position;
-
-                    Vector3 normal = hit.normal;
-                    normal.x = Mathf.Round(normal.x);
-                    normal.y = Mathf.Round(normal.y);
-                    normal.z = Mathf.Round(normal.z);
-
-                    position += normal * 0.1f; 
-                }
-                else 
-                {
-                    position = hit.point; 
-                    position.x = Mathf.Round(position.x * 10) / 10;
-                    position.y = Mathf.Round(position.y * 10) / 10;
-                    position.z = Mathf.Round(position.z * 10) / 10;
-                }
-
-                GameObject cube = Instantiate(cubePrefab, position, Quaternion.identity);
-                cube.transform.SetParent(structureParent.transform);
-                cube.GetComponent<Renderer>().material.color = currentColor;
-                cube.GetComponent<Rigidbody>().mass = 10.0f;
-                placedCubes.Add(cube.GetComponent<Rigidbody>());
-                cubes.Add(cube);
-
-                nextPlaceTime = Time.time + placeRate;
+                isSelecting = true;
+                mousePosition1 = Input.mousePosition;
+            }
+            else if (Input.GetMouseButtonUp(0))
+            {
+                SelectCubesInRect();
+                isSelecting = false;
             }
         }
-
-        if (Input.GetMouseButton(1) && (Input.GetMouseButtonDown(1) || currentMousePosition != lastMousePosition || currentCameraPosition != lastCameraPosition) && Time.time >= nextPlaceTime)
+        else
         {
-            RaycastHit hit;
-            Ray ray = Camera.main.ScreenPointToRay(currentMousePosition);
-
-            if (Physics.Raycast(ray, out hit))
+            if (Input.GetMouseButton(0) && !isStructureReadyToPlace && (Input.GetMouseButtonDown(0) || currentMousePosition != lastMousePosition || currentCameraPosition != lastCameraPosition) && Time.time >= nextPlaceTime)
             {
-                if (hit.transform.CompareTag("Cube"))
+                RaycastHit hit;
+                Ray ray = Camera.main.ScreenPointToRay(currentMousePosition);
+
+                if (Physics.Raycast(ray, out hit))
                 {
-                    cubes.Remove(hit.transform.gameObject);
-                    Destroy(hit.transform.gameObject);
+                    Vector3 position;
+
+                    if (hit.transform != grid.transform)
+                    {
+                        position = hit.transform.position;
+
+                        Vector3 normal = hit.normal;
+                        normal.x = Mathf.Round(normal.x);
+                        normal.y = Mathf.Round(normal.y);
+                        normal.z = Mathf.Round(normal.z);
+
+                        position += normal * 0.1f;
+                    }
+                    else
+                    {
+                        position = hit.point;
+                        position.x = Mathf.Round(position.x * 10) / 10;
+                        position.y = Mathf.Round(position.y * 10) / 10;
+                        position.z = Mathf.Round(position.z * 10) / 10;
+                    }
+
+                    GameObject cube = Instantiate(cubePrefab, position, Quaternion.identity);
+                    cube.transform.SetParent(structureParent.transform);
+                    cube.GetComponent<Renderer>().material.color = currentColor;
+                    cube.GetComponent<Rigidbody>().mass = 10.0f;
+                    placedCubes.Add(cube.GetComponent<Rigidbody>());
+                    cubes.Add(cube);
+
                     nextPlaceTime = Time.time + placeRate;
                 }
             }
-        }
 
-        lastMousePosition = currentMousePosition;
-        lastCameraPosition = currentCameraPosition;
-
-        if (isStructureReadyToPlace)
-        {
-            PositionStructure();
-            if (Input.GetMouseButtonDown(0))
+            if (Input.GetMouseButton(1) && (Input.GetMouseButtonDown(1) || currentMousePosition != lastMousePosition || currentCameraPosition != lastCameraPosition) && Time.time >= nextPlaceTime)
             {
-                PlaceStructure();
+                RaycastHit hit;
+                Ray ray = Camera.main.ScreenPointToRay(currentMousePosition);
+
+                if (Physics.Raycast(ray, out hit))
+                {
+                    if (hit.transform.CompareTag("Cube"))
+                    {
+                        cubes.Remove(hit.transform.gameObject);
+                        Destroy(hit.transform.gameObject);
+                        nextPlaceTime = Time.time + placeRate;
+                    }
+                }
+            }
+
+            lastMousePosition = currentMousePosition;
+            lastCameraPosition = currentCameraPosition;
+
+            if (isStructureReadyToPlace)
+            {
+                PositionStructure();
+                if (Input.GetMouseButtonDown(0))
+                {
+                    PlaceStructure();
+                }
+            }
+
+            if (isStructureReadyToPlace && Input.GetKeyDown(KeyCode.R))
+            {
+                RotateStructure();
             }
         }
+    }
+
+
+    void OnGUI()
+    {
+        if (isSelecting) 
+        {
+            var rect = Utils.GetScreenRect(mousePosition1, Input.mousePosition);
+            Utils.DrawScreenRect(rect, new Color(0.8f, 0.8f, 0.95f, 0.25f));
+            Utils.DrawScreenRectBorder(rect, 2, new Color(0.8f, 0.8f, 0.95f));
+        }
+    }
+
+    public void SelectCubesInRect()
+    {
+        if (!isSelecting) return;
+
+        Rect rect = Utils.GetScreenRect(mousePosition1, Input.mousePosition);
+        selectedCubes.Clear();
+
+        foreach (GameObject cube in cubes) 
+        {
+            if (cube == null) continue;
+            
+            if (rect.Contains(Camera.main.WorldToScreenPoint(cube.transform.position))) 
+            {
+                selectedCubes.Add(cube);
+            }
+        }
+    }
+
+    public void ChangeSelectedCubeColors(Color newColor)
+    {
+        foreach (GameObject cube in selectedCubes)
+        {
+            if (cube != null)
+            {
+                cube.GetComponent<Renderer>().material.color = newColor;
+            }
+        }
+    }
+
+    public void OnClickChangeSelectedCubeColors()
+    {
+        ChangeSelectedCubeColors(Color.blue);
     }
 
     public void ActivateGravity()
@@ -180,6 +252,11 @@ public class CubePlacer : MonoBehaviour
             default:
                 currentColor = Color.white;
                 break;
+        }
+
+        if (selectedCubes.Count > 0)
+        {
+            ChangeSelectedCubeColors(currentColor);
         }
     }
     
@@ -261,24 +338,34 @@ public class CubePlacer : MonoBehaviour
     {
         if (!isStructureReadyToPlace || loadedCubes.Count == 0) return;
 
+        foreach (GameObject cube in loadedCubes)
+        {
+            cube.GetComponent<Collider>().enabled = false;
+        }
+
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
         if (Physics.Raycast(ray, out hit))
         {
             Vector3 position = hit.point;
-
             position.x = Mathf.Round(position.x * 10) / 10;
             position.y = Mathf.Round(position.y * 10) / 10;
             position.z = Mathf.Round(position.z * 10) / 10;
 
-            Vector3 initialPosition = loadedCubes[0].transform.position;
+            GameObject lowestCube = loadedCubes.OrderBy(cube => cube.transform.position.y).First();
+            Vector3 initialPosition = lowestCube.transform.position;
             foreach (GameObject cube in loadedCubes)
             {
                 Vector3 relativePosition = cube.transform.position - initialPosition;
                 cube.transform.position = position + relativePosition;
                 cube.SetActive(true);
             }
+        }
+
+        foreach (GameObject cube in loadedCubes)
+        {
+            cube.GetComponent<Collider>().enabled = true;
         }
     }
 
@@ -288,11 +375,34 @@ public class CubePlacer : MonoBehaviour
 
         foreach (GameObject cube in loadedCubes)
         {
+            cube.GetComponent<Collider>().enabled = false;
+        }
+
+        foreach (GameObject cube in loadedCubes)
+        {
             cubes.Add(cube);
+        }
+
+        foreach (GameObject cube in loadedCubes)
+        {
+            cube.GetComponent<Collider>().enabled = true;
         }
 
         loadedCubes.Clear();
         isStructureReadyToPlace = false;
+    }
+
+    public void RotateStructure()
+    {
+        if (!isStructureReadyToPlace || loadedCubes.Count == 0) return;
+
+        GameObject lowestCube = loadedCubes.OrderBy(cube => cube.transform.position.y).First();
+        Vector3 rotationPoint = lowestCube.transform.position;
+
+        foreach (GameObject cube in loadedCubes)
+        {
+            cube.transform.RotateAround(rotationPoint, Vector3.up, rotationStep);
+        }
     }
 }
 
@@ -306,5 +416,32 @@ public class CubeData
     {
         this.position = new float[3] { position.x, position.y, position.z };
         this.color = new float[4] { color.r, color.g, color.b, color.a };
+    }
+}
+
+public static class Utils
+{
+    public static Rect GetScreenRect(Vector3 screenPosition1, Vector3 screenPosition2)
+    {
+        screenPosition1.y = Screen.height - screenPosition1.y;
+        screenPosition2.y = Screen.height - screenPosition2.y;
+        var topLeft = Vector3.Min(screenPosition1, screenPosition2);
+        var bottomRight = Vector3.Max(screenPosition1, screenPosition2);
+        return Rect.MinMaxRect(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
+    }
+
+    public static void DrawScreenRect(Rect rect, Color color)
+    {
+        GUI.color = color;
+        GUI.DrawTexture(rect, Texture2D.whiteTexture);
+        GUI.color = Color.white;
+    }
+
+    public static void DrawScreenRectBorder(Rect rect, float thickness, Color color)
+    {
+        Utils.DrawScreenRect(new Rect(rect.xMin, rect.yMin, rect.width, thickness), color);
+        Utils.DrawScreenRect(new Rect(rect.xMin, rect.yMin, thickness, rect.height), color);
+        Utils.DrawScreenRect(new Rect(rect.xMax - thickness, rect.yMin, thickness, rect.height), color);
+        Utils.DrawScreenRect(new Rect(rect.xMin, rect.yMax - thickness, rect.width, thickness), color);
     }
 }
