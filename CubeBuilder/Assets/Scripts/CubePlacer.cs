@@ -109,7 +109,8 @@ public class CubePlacer : MonoBehaviour
                     float connectionThreshold = 1.1f;
                     foreach (GameObject otherCube in cubes)
                     {
-                        if (cube == otherCube) continue;
+                        if (cube == otherCube || otherCube.tag != "Cube") continue;
+
                         if (Vector3.Distance(cube.transform.position, otherCube.transform.position) < connectionThreshold)
                         {
                             FixedJoint joint = cube.AddComponent<FixedJoint>();
@@ -226,17 +227,16 @@ public class CubePlacer : MonoBehaviour
         }
     }
 
-    public void ActivateGravity()
+    void ActivateGravity()
     {
-        foreach (GameObject cube in cubes)
+        foreach (var cube in cubes)
         {
-            cube.GetComponent<Rigidbody>().isKinematic = false;
-
-            if (cubeConnections.ContainsKey(cube))
+            if(cube != null)
             {
-                foreach (GameObject connectedCube in cubeConnections[cube])
+                var rigidbody = cube.GetComponent<Rigidbody>();
+                if(rigidbody != null)
                 {
-                    connectedCube.GetComponent<Rigidbody>().isKinematic = false;
+                    rigidbody.isKinematic = false;
                 }
             }
         }
@@ -538,5 +538,19 @@ public static class Utils
         Utils.DrawScreenRect(new Rect(rect.xMin, rect.yMin, thickness, rect.height), color);
         Utils.DrawScreenRect(new Rect(rect.xMax - thickness, rect.yMin, thickness, rect.height), color);
         Utils.DrawScreenRect(new Rect(rect.xMin, rect.yMax - thickness, rect.width, thickness), color);
+    }
+}
+
+public class Structure : MonoBehaviour
+{
+    public List<GameObject> cubes;
+
+    void Start()
+    {
+        for (int i = 0; i < cubes.Count - 1; i++)
+        {
+            FixedJoint joint = cubes[i].AddComponent<FixedJoint>();
+            joint.connectedBody = cubes[i + 1].GetComponent<Rigidbody>();
+        }
     }
 }
