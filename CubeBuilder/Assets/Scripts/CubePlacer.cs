@@ -30,6 +30,8 @@ public class CubePlacer : MonoBehaviour
     private Vector3 mousePosition1;
     private List<GameObject> selectedCubes = new List<GameObject>();
 
+    public GameObject outlinePrefab;
+
     private Dictionary<GameObject, List<GameObject>> cubeConnections = new Dictionary<GameObject, List<GameObject>>();
 
     void Update()
@@ -175,16 +177,33 @@ public class CubePlacer : MonoBehaviour
     {
         if (!isSelecting) return;
 
-        Rect rect = Utils.GetScreenRect(mousePosition1, Input.mousePosition);
+        // Clear previous selection and remove outlines
+        foreach (GameObject cube in selectedCubes)
+        {
+            if (cube != null)
+            {
+                Transform outlineTransform = cube.transform.Find("Outline");
+                if (outlineTransform != null)
+                {
+                    Destroy(outlineTransform.gameObject);
+                }
+            }
+        }
         selectedCubes.Clear();
 
-        foreach (GameObject cube in cubes) 
+        Rect rect = Utils.GetScreenRect(mousePosition1, Input.mousePosition);
+
+        foreach (GameObject cube in cubes)
         {
             if (cube == null) continue;
-            
-            if (rect.Contains(Camera.main.WorldToScreenPoint(cube.transform.position))) 
+
+            if (rect.Contains(Camera.main.WorldToScreenPoint(cube.transform.position)))
             {
                 selectedCubes.Add(cube);
+
+                // Instantiate outline and parent it to the cube
+                GameObject outline = Instantiate(outlinePrefab, cube.transform.position, Quaternion.identity, cube.transform);
+                outline.name = "Outline";
             }
         }
     }
