@@ -34,12 +34,6 @@ public class CubePlacer : MonoBehaviour
 
     private Dictionary<GameObject, List<GameObject>> cubeConnections = new Dictionary<GameObject, List<GameObject>>();
     
-    void Start()
-    {
-        // Instantiate the outline at position (0, 0, 0)
-        Instantiate(outlinePrefab, new Vector3(0, 0, 0), Quaternion.identity);
-    }
-
     void Update()
     {
         if (EventSystem.current.IsPointerOverGameObject())
@@ -183,7 +177,7 @@ public class CubePlacer : MonoBehaviour
     {
         if (!isSelecting) return;
 
-        // Clear previous selection and remove outlines
+        // Clear previous outlines
         foreach (GameObject cube in selectedCubes)
         {
             if (cube != null)
@@ -195,22 +189,34 @@ public class CubePlacer : MonoBehaviour
                 }
             }
         }
-        selectedCubes.Clear();
 
+        selectedCubes.Clear();
         Rect rect = Utils.GetScreenRect(mousePosition1, Input.mousePosition);
+        Dictionary<Vector2, GameObject> topmostCubes = new Dictionary<Vector2, GameObject>();
 
         foreach (GameObject cube in cubes)
         {
             if (cube == null) continue;
 
-            if (rect.Contains(Camera.main.WorldToScreenPoint(cube.transform.position)))
+            Vector3 cubePos = cube.transform.position;
+            Vector2 cubeXZ = new Vector2(cubePos.x, cubePos.z);
+
+            if (rect.Contains(Camera.main.WorldToScreenPoint(cubePos)))
             {
-                selectedCubes.Add(cube);
-                GameObject outline = Instantiate(outlinePrefab, cube.transform.position, Quaternion.identity, cube.transform);
-                outline.name = "Outline";
-                outline.transform.localPosition = Vector3.zero;  // Set local position to zero
-                outline.transform.localScale = new Vector3(1.1f, 1.1f, 1.1f);  // Set local scale to be slightly larger than the cube
+                if (!topmostCubes.ContainsKey(cubeXZ) || cubePos.y > topmostCubes[cubeXZ].transform.position.y)
+                {
+                    topmostCubes[cubeXZ] = cube;
+                }
             }
+        }
+
+        foreach (var cube in topmostCubes.Values)
+        {
+            selectedCubes.Add(cube);
+            GameObject outline = Instantiate(outlinePrefab, cube.transform.position, Quaternion.identity, cube.transform);
+            outline.name = "Outline";
+            outline.transform.localPosition = Vector3.zero;
+            outline.transform.localScale = new Vector3(1.1f, 1.1f, 1.1f);
         }
     }
 
@@ -482,34 +488,34 @@ public class CubePlacer : MonoBehaviour
 
     void AddLayerToSelectedCubes()
     {
-        if (selectedCubes.Count == 0)
-        return;
+        if (selectedCubes.Count == 0) return;
 
-        List<GameObject> newCubes = new List<GameObject>();
-
-        float highestY = selectedCubes[0].transform.position.y;
+        // Clear previous outlines
         foreach (GameObject cube in selectedCubes)
         {
-            if (cube.transform.position.y > highestY)
+            if (cube != null)
             {
-                highestY = cube.transform.position.y;
+                Transform outlineTransform = cube.transform.Find("Outline");
+                if (outlineTransform != null)
+                {
+                    Destroy(outlineTransform.gameObject);
+                }
             }
         }
 
+        List<GameObject> newCubes = new List<GameObject>();
+
         foreach (GameObject cube in selectedCubes)
         {
-            if (cube.transform.position.y == highestY)
-            {
-                float cubeHeight = cube.transform.localScale.y;
-                Vector3 newPosition = cube.transform.position + new Vector3(0, cubeHeight, 0);
-                GameObject newCube = Instantiate(cubePrefab, newPosition, Quaternion.identity);
-                newCube.GetComponent<Renderer>().material.color = cube.GetComponent<Renderer>().material.color;
-                newCube.transform.SetParent(structureParent.transform);
-                newCube.GetComponent<Rigidbody>().mass = 10.0f;
-                placedCubes.Add(newCube.GetComponent<Rigidbody>());
-                cubes.Add(newCube);
-                newCubes.Add(newCube);
-            }
+            float cubeHeight = cube.transform.localScale.y;
+            Vector3 newPosition = cube.transform.position + new Vector3(0, cubeHeight, 0);
+            GameObject newCube = Instantiate(cubePrefab, newPosition, Quaternion.identity);
+            newCube.GetComponent<Renderer>().material.color = cube.GetComponent<Renderer>().material.color;
+            newCube.transform.SetParent(structureParent.transform);
+            newCube.GetComponent<Rigidbody>().mass = 10.0f;
+            placedCubes.Add(newCube.GetComponent<Rigidbody>());
+            cubes.Add(newCube);
+            newCubes.Add(newCube);
         }
 
         selectedCubes = newCubes;
