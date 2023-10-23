@@ -246,7 +246,7 @@ public class CubePlacer : MonoBehaviour
             GameObject outline = Instantiate(outlinePrefab, cube.transform.position, Quaternion.identity, cube.transform);
             outline.name = "Outline";
             outline.transform.localPosition = Vector3.zero;
-            outline.transform.localScale = new Vector3(1.1f, 1.1f, 1.1f);
+            outline.transform.localScale = new Vector3(1.01f, 1.01f, 1.01f);
         }
     }
 
@@ -557,21 +557,17 @@ public class CubePlacer : MonoBehaviour
     {
         if (selectedCubes.Count == 0) return;
 
-        // Clear previous outlines
+        // Clear existing outlines
         foreach (GameObject cube in selectedCubes)
         {
-            if (cube != null)
+            Transform outlineTransform = cube.transform.Find("Outline");
+            if (outlineTransform != null)
             {
-                Transform outlineTransform = cube.transform.Find("Outline");
-                if (outlineTransform != null)
-                {
-                    Destroy(outlineTransform.gameObject);
-                }
+                Destroy(outlineTransform.gameObject);
             }
         }
 
         List<GameObject> newCubes = new List<GameObject>();
-
         foreach (GameObject cube in selectedCubes)
         {
             float cubeHeight = cube.transform.localScale.y;
@@ -583,6 +579,12 @@ public class CubePlacer : MonoBehaviour
             placedCubes.Add(newCube.GetComponent<Rigidbody>());
             cubes.Add(newCube);
             newCubes.Add(newCube);
+
+            // Add outline to the new cube
+            GameObject outline = Instantiate(outlinePrefab, newCube.transform.position, Quaternion.identity, newCube.transform);
+            outline.name = "Outline";
+            outline.transform.localPosition = Vector3.zero;
+            outline.transform.localScale = new Vector3(1.01f, 1.01f, 1.01f);
         }
 
         selectedCubes = newCubes;
