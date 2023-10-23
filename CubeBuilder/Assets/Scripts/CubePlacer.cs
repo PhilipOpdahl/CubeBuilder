@@ -177,7 +177,6 @@ public class CubePlacer : MonoBehaviour
     {
         if (!isSelecting) return;
 
-        // Clear previous outlines
         foreach (GameObject cube in selectedCubes)
         {
             if (cube != null)
@@ -192,6 +191,7 @@ public class CubePlacer : MonoBehaviour
 
         selectedCubes.Clear();
         Rect rect = Utils.GetScreenRect(mousePosition1, Input.mousePosition);
+        rect.y = Screen.height - rect.y - rect.height;
         Dictionary<Vector2, GameObject> topmostCubes = new Dictionary<Vector2, GameObject>();
 
         foreach (GameObject cube in cubes)
@@ -203,15 +203,30 @@ public class CubePlacer : MonoBehaviour
 
             if (rect.Contains(Camera.main.WorldToScreenPoint(cubePos)))
             {
-                if (!topmostCubes.ContainsKey(cubeXZ) || cubePos.y > topmostCubes[cubeXZ].transform.position.y)
+                // Check if there's a cube above this one
+                Vector3 aboveCubePos = new Vector3(cubePos.x, cubePos.y + 0.1f, cubePos.z);
+                bool isCubeAbove = cubes.Exists(c => c.transform.position == aboveCubePos);
+
+                if (!isCubeAbove)
                 {
-                    topmostCubes[cubeXZ] = cube;
+                    if (!topmostCubes.ContainsKey(cubeXZ) || cubePos.y > topmostCubes[cubeXZ].transform.position.y)
+                    {
+                        topmostCubes[cubeXZ] = cube;
+                    }
                 }
             }
         }
 
+        // Additional check to ensure only topmost cubes in each partial column are selected
         foreach (var cube in topmostCubes.Values)
         {
+            Vector3 cubePos = cube.transform.position;
+            Vector2 cubeXZ = new Vector2(cubePos.x, cubePos.z);
+            if (topmostCubes.ContainsKey(cubeXZ) && cubePos.y < topmostCubes[cubeXZ].transform.position.y)
+            {
+                continue;
+            }
+
             selectedCubes.Add(cube);
             GameObject outline = Instantiate(outlinePrefab, cube.transform.position, Quaternion.identity, cube.transform);
             outline.name = "Outline";
