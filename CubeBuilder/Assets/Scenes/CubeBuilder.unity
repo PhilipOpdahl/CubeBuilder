@@ -2461,7 +2461,7 @@ MonoBehaviour:
   currentColor: {r: 1, g: 1, b: 1, a: 1}
   structureParent: {fileID: 568928985}
   rotationStep: 90
-  outlinePrefab: {fileID: 2023527002018123253, guid: 0c80c0366c11e3f449ed706196f66d8c,
+  outlinePrefab: {fileID: 7449408910308777381, guid: 0c80c0366c11e3f449ed706196f66d8c,
     type: 3}
 --- !u!4 &1017238323
 Transform:

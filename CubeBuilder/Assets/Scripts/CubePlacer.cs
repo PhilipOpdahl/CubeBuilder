@@ -33,6 +33,12 @@ public class CubePlacer : MonoBehaviour
     public GameObject outlinePrefab;
 
     private Dictionary<GameObject, List<GameObject>> cubeConnections = new Dictionary<GameObject, List<GameObject>>();
+    
+    void Start()
+    {
+        // Instantiate the outline at position (0, 0, 0)
+        Instantiate(outlinePrefab, new Vector3(0, 0, 0), Quaternion.identity);
+    }
 
     void Update()
     {
@@ -200,10 +206,10 @@ public class CubePlacer : MonoBehaviour
             if (rect.Contains(Camera.main.WorldToScreenPoint(cube.transform.position)))
             {
                 selectedCubes.Add(cube);
-
-                // Instantiate outline and parent it to the cube
                 GameObject outline = Instantiate(outlinePrefab, cube.transform.position, Quaternion.identity, cube.transform);
                 outline.name = "Outline";
+                outline.transform.localPosition = Vector3.zero;  // Set local position to zero
+                outline.transform.localScale = new Vector3(1.1f, 1.1f, 1.1f);  // Set local scale to be slightly larger than the cube
             }
         }
     }
