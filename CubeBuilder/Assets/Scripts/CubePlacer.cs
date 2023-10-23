@@ -49,6 +49,21 @@ public class CubePlacer : MonoBehaviour
             AddLayerToSelectedCubes();
         }
 
+        bool isCtrlPressed = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+
+        if (isCtrlPressed)
+        {
+            if (Input.GetMouseButtonDown(0)) // Ctrl + Left Click to select
+            {
+                SelectDeselectIndividualCube(true);
+            }
+            else if (Input.GetMouseButtonDown(1)) // Ctrl + Right Click to deselect
+            {
+                SelectDeselectIndividualCube(false);
+            }
+            return; // Skip the rest of the Update method if Ctrl is pressed
+        }
+
         if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
         {
             if (Input.GetMouseButtonDown(0))
@@ -70,7 +85,7 @@ public class CubePlacer : MonoBehaviour
                 ClearSelection();
             }
 
-            if (Input.GetMouseButton(0) && !isStructureReadyToPlace && (Input.GetMouseButtonDown(0) || currentMousePosition != lastMousePosition || currentCameraPosition != lastCameraPosition) && Time.time >= nextPlaceTime)
+            if (Input.GetMouseButton(0) && !isCtrlPressed && !isStructureReadyToPlace && (Input.GetMouseButtonDown(0) || currentMousePosition != lastMousePosition || currentCameraPosition != lastCameraPosition) && Time.time >= nextPlaceTime)
             {
                 RaycastHit hit;
                 Ray ray = Camera.main.ScreenPointToRay(currentMousePosition);
@@ -128,7 +143,7 @@ public class CubePlacer : MonoBehaviour
                 }
             }
 
-            if (Input.GetMouseButton(1) && (Input.GetMouseButtonDown(1) || currentMousePosition != lastMousePosition || currentCameraPosition != lastCameraPosition) && Time.time >= nextPlaceTime)
+            if (Input.GetMouseButton(1) && !isCtrlPressed && (Input.GetMouseButtonDown(1) || currentMousePosition != lastMousePosition || currentCameraPosition != lastCameraPosition) && Time.time >= nextPlaceTime)
             {
                 RaycastHit hit;
                 Ray ray = Camera.main.ScreenPointToRay(currentMousePosition);
@@ -269,6 +284,43 @@ public class CubePlacer : MonoBehaviour
                     cubeConnections[otherCube] = new List<GameObject>();
                 }
                 cubeConnections[otherCube].Add(cube);
+            }
+        }
+    }
+
+    void SelectDeselectIndividualCube(bool select)
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit))
+        {
+            if (hit.transform.CompareTag("Cube"))
+            {
+                GameObject cube = hit.transform.gameObject;
+
+                if (select)
+                {
+                    if (!selectedCubes.Contains(cube))
+                    {
+                        selectedCubes.Add(cube);
+                        GameObject outline = Instantiate(outlinePrefab, cube.transform.position, Quaternion.identity, cube.transform);
+                        outline.name = "Outline";
+                        outline.transform.localPosition = Vector3.zero;
+                        outline.transform.localScale = new Vector3(1.01f, 1.01f, 1.01f);
+                    }
+                }
+                else
+                {
+                    if (selectedCubes.Contains(cube))
+                    {
+                        selectedCubes.Remove(cube);
+                        Transform outlineTransform = cube.transform.Find("Outline");
+                        if (outlineTransform != null)
+                        {
+                            Destroy(outlineTransform.gameObject);
+                        }
+                    }
+                }
             }
         }
     }
