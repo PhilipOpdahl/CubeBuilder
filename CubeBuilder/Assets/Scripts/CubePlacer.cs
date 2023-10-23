@@ -180,9 +180,10 @@ public class CubePlacer : MonoBehaviour
         }
     }
 
-    void SaveStructure()
+    public void SaveStructure()
     {
         LevelData newLevelData = Instantiate(levelDataTemplate);
+        Debug.Log("New LevelData instantiated");
         newLevelData.relativePositions = new List<Vector3>();
         newLevelData.colors = new List<Color>();
 

@@ -2599,7 +2599,7 @@ MonoBehaviour:
   rotationStep: 90
   outlinePrefab: {fileID: 7449408910308777381, guid: 0c80c0366c11e3f449ed706196f66d8c,
     type: 3}
-  levelDataTemplate: {fileID: 0}
+  levelDataTemplate: {fileID: 11400000, guid: e31e317ca2079ea4da358ccc55c12ff8, type: 2}
 --- !u!4 &1017238323
 Transform:
   m_ObjectHideFlags: 0
@@ -4065,7 +4065,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1017238322}
         m_TargetAssemblyTypeName: CubePlacer, Assembly-CSharp
-        m_MethodName: LoadCubes
+        m_MethodName: SaveStructure
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
