@@ -32,6 +32,8 @@ public class CubePlacer : MonoBehaviour
 
     public GameObject outlinePrefab;
 
+    [SerializeField] LevelData levelDataTemplate; // Your ScriptableObject class
+
     private Dictionary<GameObject, List<GameObject>> cubeConnections = new Dictionary<GameObject, List<GameObject>>();
     
     void Update()
@@ -176,6 +178,25 @@ public class CubePlacer : MonoBehaviour
                 RotateStructure();
             }
         }
+    }
+
+    void SaveStructure()
+    {
+        LevelData newLevelData = Instantiate(levelDataTemplate);
+        newLevelData.relativePositions = new List<Vector3>();
+        newLevelData.colors = new List<Color>();
+
+        foreach (GameObject cube in cubes) // Assuming 'cubes' is your list of cubes in the structure
+        {
+            Vector3 relativePosition = cube.transform.position; // Adjust as needed
+            Color color = cube.GetComponent<Renderer>().material.color;
+
+            newLevelData.relativePositions.Add(relativePosition);
+            newLevelData.colors.Add(color);
+        }
+
+        // Save newLevelData as a ScriptableObject asset
+        // You might want to use UnityEditor functionalities for this if you're in the editor
     }
 
     void OnGUI()
