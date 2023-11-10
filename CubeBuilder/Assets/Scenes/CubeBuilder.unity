@@ -4063,9 +4063,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1017238322}
+      - m_Target: {fileID: 11500000, guid: 042f9e69df1d3dc46bf7af7777449cbc, type: 3}
         m_TargetAssemblyTypeName: CubePlacer, Assembly-CSharp
-        m_MethodName: SaveStructure
+        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

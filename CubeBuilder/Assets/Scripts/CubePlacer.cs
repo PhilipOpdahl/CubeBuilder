@@ -124,6 +124,20 @@ public class CubePlacer : MonoBehaviour
 
                     nextPlaceTime = Time.time + placeRate;
 
+                    // Remove outline from selected cubes before clearing the selection
+                    foreach (GameObject selectedCube in selectedCubes)
+                    {
+                        Transform outlineTransform = selectedCube.transform.Find("Outline");
+                        if (outlineTransform != null)
+                        {
+                            Destroy(outlineTransform.gameObject);
+                        }
+                    }
+
+            
+                    ClearSelection();
+                    isSelecting = false;
+
                     cubeConnections[cube] = new List<GameObject>();
                     float connectionThreshold = 1.1f;
                     foreach (GameObject otherCube in cubes)
@@ -154,6 +168,19 @@ public class CubePlacer : MonoBehaviour
                 {
                     if (hit.transform.CompareTag("Cube"))
                     {
+                        // Remove outline from selected cubes before clearing the selection
+                        foreach (GameObject selectedCube in selectedCubes)
+                        {
+                            Transform outlineTransform = selectedCube.transform.Find("Outline");
+                            if (outlineTransform != null)
+                            {
+                                Destroy(outlineTransform.gameObject);
+                            }
+                        }
+
+                        ClearSelection();  // Clear the selection
+                        isSelecting = false;  // Reset the isSelecting flag
+                        
                         cubes.Remove(hit.transform.gameObject);
                         Destroy(hit.transform.gameObject);
                         nextPlaceTime = Time.time + placeRate;
@@ -617,7 +644,6 @@ public class CubePlacer : MonoBehaviour
         foreach (GameObject cube in selectedCubes)
         {
             var cubeRenderer = cube.GetComponent<Renderer>();
-            cubeRenderer.material.color = Color.white;
         }
         selectedCubes.Clear();
     }
